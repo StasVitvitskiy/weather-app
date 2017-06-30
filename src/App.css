@@ -1,0 +1,27 @@
+#weatherType:first-letter {
+  text-transform:uppercase;
+}
+.color-blue {
+  color:blue;
+  cursor:pointer;
+}
+.color-blue:hover {
+  color:deepskyblue;
+}
+.font-size {
+  font-size:2em;
+}
+.rounded {
+  padding: 1em;
+  font-size: 2em;
+  text-align: center;
+  background: rgba(255,245,215,0.3);
+  width:20%;
+  border-radius: 50%;
+  height:250px;
+  margin:10% auto 10% auto;
+}
+.border {
+  border-top:1px solid rgba(255,245,215,0.6);
+  padding-top:5%;
+}
