@@ -6,6 +6,10 @@ html {
 body {
   color: whitesmoke;
 }
+html, body {
+  min-height: 100%;
+  height: 100%;
+}
 #weatherType:first-letter {
   text-transform:uppercase;
 }
@@ -18,6 +22,9 @@ body {
 }
 .flex {
   display: flex;
+}
+#root {
+  height: 100%;
 }
 .text-center {
     width: 100%;
@@ -89,12 +96,14 @@ li {
   cursor: pointer;
   border-radius: 3px;
   font-size: 0.5em;
+  border-color: transparent;
+  height: 26px;
 }
 .button:hover {
   background-color: darkgreen;
 }
-.baseline {
-  align-items: baseline;
+.align-items-center {
+  align-items: center;
 }
 footer {
   padding-bottom: 3%;
