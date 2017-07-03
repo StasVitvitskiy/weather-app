@@ -19,9 +19,15 @@ class App extends Component {
                 const lat = data.lat;
                 const long = data.lon;
                 this.getTime(lat, long);
-                const api = 'http://api.openweathermap.org/data/2.5/weather?&lat='+lat+'&lon='+long+'&id=5809844&appid=8de948601c0463fbc6ecf328a7d1b6b6';
-                return getJSON(api)
-            })
+                this.getDataFromApi(lat, long)
+            });
+
+        this.initSearchBox()
+    }
+
+    getDataFromApi(lat, long) {
+        const api = 'http://api.openweathermap.org/data/2.5/weather?&lat='+lat+'&lon='+long+'&id=5809844&appid=8de948601c0463fbc6ecf328a7d1b6b6';
+        return getJSON(api)
             .then(data => {
                 const weatherType = data.weather[0].description;
                 const kTemp = data.main.temp;
@@ -50,8 +56,36 @@ class App extends Component {
             const offsets = response.dstOffset * 1000 + response.rawOffset * 1000;
             const localdate = new Date(timestamp * 1000 + offsets);
             this.props.setTime(localdate);
+            this.startTimeInterval()
         })
     }
+
+    startTimeInterval() {
+        setInterval(() => {
+            const timeObj = this.props.weather.timeObj;
+            timeObj.setSeconds(timeObj.getSeconds() + 1);
+            this.props.setTime(timeObj)
+        }, 1000)
+    }
+
+    initSearchBox = () => {
+        const input = document.querySelector('#search-input');
+        const searchBox = new window.google.maps.places.SearchBox(input);
+        searchBox.addListener('places_changed', () => {
+            const places = searchBox.getPlaces();
+            if (places.length == 0) {
+                return;
+            }
+            if (places.length == 1) {
+                const place = places[0];
+                const location = place.geometry.location;
+                const lat = location.lat();
+                const lng = location.lng();
+                this.getDataFromApi(lat, lng);
+                this.getTime(lat, lng)
+            }
+        })
+    };
 
     toggleTempType = () => {
         this.props.toggleTempType()
@@ -59,34 +93,40 @@ class App extends Component {
 
     renderIcon() {
         const weatherType = this.props.weather.weatherType;
-        if(weatherType === 'light shower snow'|| weatherType === 'snow') {
+        if(weatherType.includes('snow')) {
             return <img
                         className="img"
                         src={snowIcon}
                         alt=""
                     />
-        } else if (weatherType === "mist") {
+        } else if (weatherType == "mist" || weatherType == "haze") {
             return <img
                 className="img"
                 src={mistIcon}
                 alt=""
             />
-        } else if (weatherType === "light rain" || weatherType === "rain") {
+        } else if (weatherType.includes("rain")) {
             return <img
                 className="img"
                 src={rainIcon}
                 alt=""
             />
-        } else if (weatherType === "clouds") {
+        } else if(weatherType === "broken clouds") {
             return <img
                 className="img"
-                src={cloudyIcon}
+                src={brokenCloudsIcon}
                 alt=""
             />
         } else if(weatherType === "overcast clouds") {
             return <img
                 className="img"
                 src={overcastIcon}
+                alt=""
+            />
+        } else if (weatherType.includes("clouds")) {
+            return <img
+                className="img"
+                src={cloudyIcon}
                 alt=""
             />
         } else if (weatherType === "clear sky") {
@@ -105,14 +145,12 @@ class App extends Component {
                     alt=""
                 />
             }
-        } else if(weatherType === "broken clouds") {
-            return <img
-                className="img"
-                src={brokenCloudsIcon}
-                alt=""
-            />
         }
     }
+
+    onSubmit = (e) => {
+        e.preventDefault()
+    };
 
     render() {
         const weather = this.props.weather;
@@ -163,13 +201,16 @@ class App extends Component {
                         </li>
                         </ul>
                     </div>
-                    <form action="">
+                    <form action="" onSubmit={this.onSubmit}>
                         <div className="text-align form">
                             <h2 className="content">Find a Forecast</h2>
                             <div className="align-items-center flex content margin-bottom">
-                                <input className="width"
-                                       placeholder="Search for location or keyword"
-                                       type="text"/>
+                                <input
+                                    id="search-input"
+                                    className="width"
+                                   placeholder="Search for location or keyword"
+                                   type="text"
+                                />
                                 <button className="button">SEARCH</button>
                             </div>
                         </div>
