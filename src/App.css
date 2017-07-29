@@ -117,3 +117,7 @@ footer {
 .margin-left {
   margin-left:0.3%;
 }
+.home {
+    margin-left: 8px;
+    cursor: pointer;
+}

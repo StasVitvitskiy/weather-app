@@ -3,6 +3,7 @@ import './App.css';
 import {getJSON} from './util'
 import {connect} from 'react-redux'
 import {loadData, toggleTempType, setTime} from './reducer'
+import Spinner from 'react-spinkit'
 import snowIcon from './snowing.svg'
 import rainIcon from './rain.svg'
 import mistIcon from './mist.svg'
@@ -11,19 +12,38 @@ import overcastIcon from './wind.svg'
 import brokenCloudsIcon from './broken-clouds.svg'
 import sunnyIcon from './sunny-day.svg'
 import nightIcon from './night-with-stars.svg'
+import homeIcon from './home-icon.svg'
 
 class App extends Component {
+    state = {
+        isLoading: true
+    };
+
     componentDidMount() {
+        this.showLocal();
+
+        this.initSearchBox()
+    }
+
+    showLocal = () => {
+        this.setState({
+            isLoading: true
+        });
         getJSON("http://ip-api.com/json")
             .then(data => {
                 const lat = data.lat;
                 const long = data.lon;
-                this.getTime(lat, long);
-                this.getDataFromApi(lat, long)
+                Promise.all([
+                    this.getTime(lat, long),
+                    this.getDataFromApi(lat, long)
+                ]).then(() => {
+                    this.input.value = '';
+                    this.setState({
+                        isLoading: false
+                    })
+                })
             });
-
-        this.initSearchBox()
-    }
+    };
 
     getDataFromApi(lat, long) {
         const api = 'http://api.openweathermap.org/data/2.5/weather?&lat='+lat+'&lon='+long+'&id=5809844&appid=8de948601c0463fbc6ecf328a7d1b6b6';
@@ -52,7 +72,7 @@ class App extends Component {
         const apikey = 'AIzaSyDuziSpvaIaz_Xv81OXImn5fqALenciGSI';
          
         const apicall = 'https://maps.googleapis.com/maps/api/timezone/json?location=' + loc + '&timestamp=' + timestamp + '&key=' + apikey;
-        getJSON(apicall).then(response => {
+        return getJSON(apicall).then(response => {
             const offsets = response.dstOffset * 1000 + response.rawOffset * 1000;
             const localdate = new Date(timestamp * 1000 + offsets);
             this.props.setTime(localdate);
@@ -70,6 +90,7 @@ class App extends Component {
 
     initSearchBox = () => {
         const input = document.querySelector('#search-input');
+        this.input = input;
         const searchBox = new window.google.maps.places.SearchBox(input);
         searchBox.addListener('places_changed', () => {
             const places = searchBox.getPlaces();
@@ -81,10 +102,20 @@ class App extends Component {
                 const location = place.geometry.location;
                 const lat = location.lat();
                 const lng = location.lng();
-                this.getDataFromApi(lat, lng);
-                this.getTime(lat, lng)
+
+                this.setState({
+                    isLoading: true
+                });
+                Promise.all([
+                    this.getDataFromApi(lat, lng),
+                    this.getTime(lat, lng)
+                ]).then(() => {
+                    this.setState({
+                        isLoading: false
+                    })
+                })
             }
-        })
+        });
     };
 
     toggleTempType = () => {
@@ -175,7 +206,15 @@ class App extends Component {
                         </h1>
                     </div>
                     <div className="text-align">
-                        {this.renderIcon()}
+                        {this.state.isLoading &&
+                            <Spinner
+                                name="line-scale-pulse-out"
+                                color="white"
+                                fadeIn="none"
+                            />
+                            ||
+                            this.renderIcon()
+                        }
                     </div>
                     <div className="display">
                         <ul className="ul">
@@ -211,7 +250,14 @@ class App extends Component {
                                    placeholder="Search for location or keyword"
                                    type="text"
                                 />
-                                <button className="button">SEARCH</button>
+                                <img
+                                    src={homeIcon}
+                                    alt=""
+                                    className="home"
+                                    width={26}
+                                    height={26}
+                                    onClick={this.showLocal}
+                                />
                             </div>
                         </div>
                     </form>
